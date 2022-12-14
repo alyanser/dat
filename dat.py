@@ -36,30 +36,34 @@ class Main_window(QMainWindow):
 		self.load_data()
 
 	def cell_changed(self, row, col):
-
 		if col == 1:
 			self.table.sortItems(1, Qt.SortOrder.DescendingOrder)
 
 	def load_data(self):
-		pass
-
-	def store_data(self):
-		settings = QSettings()
+		settings = QSettings("conat", "dat")
 		settings.beginGroup("datum")
 
-		text = QByteArray()
+		for key in settings.allKeys():
+			idxes = key.split('-')
+			row = int(idxes[0])
+			col = int(idxes[1])
+
+			if row >= self.table.rowCount():
+				self.table.setRowCount(row + 1)
+
+			item = QTableWidgetItem()
+			item.setData(Qt.ItemDataRole.EditRole, settings.value(key))
+			item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+
+			self.table.setItem(row, col, item)
+
+	def store_data(self):
+		settings = QSettings("conat", "dat")
+		settings.beginGroup("datum")
 
 		for i in range(self.table.rowCount()):
 			for j in range(self.table.columnCount()):
-				text += bytearray(self.table.item(i, j).text(), encoding = 'utf-8')
-
-				if j + 1 < self.table.columnCount():
-					text += b' '
-
-			if i + 1 < self.table.rowCount():
-				text += b','
-
-		settings.beginWriteArray(text)
+				settings.setValue(str(i) + '-' + str(j), self.table.item(i, j).text())
 
 	def setup_table(self):
 		self.table.setColumnCount(3)
@@ -104,6 +108,8 @@ class Main_window(QMainWindow):
 			msg_box.setIcon(QMessageBox.Icon.Critical)
 			msg_box.show()
 			return
+
+		assert '\n' not in name
 
 		(points, points_ok) = input_dialog.getDouble(self, "Insert Record", "Default Points for " + name)
 
