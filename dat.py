@@ -30,8 +30,6 @@ class Main_window(QMainWindow):
 		self.setCentralWidget(self.table)
 		self.addToolBar(self.toolbar)
 
-		self.table.cellChanged.connect(self.cell_changed)
-
 		self.setup_toolbar()
 		self.setup_table()
 
@@ -40,7 +38,7 @@ class Main_window(QMainWindow):
 	def cell_changed(self, row, col):
 
 		if col == 1:
-			self.table.sortByColumn(1, Qt.SortOrder.DescendingOrder)
+			self.table.sortItems(1, Qt.SortOrder.DescendingOrder)
 
 	def load_data(self):
 		pass
@@ -117,6 +115,7 @@ class Main_window(QMainWindow):
 		if not balance_ok:
 			return
 
+		self.table.setSortingEnabled(False)
 		self.table.insertRow(self.table.rowCount())
 
 		name_item = QTableWidgetItem()
@@ -133,7 +132,9 @@ class Main_window(QMainWindow):
 		self.table.setItem(self.table.rowCount() - 1, 0, name_item)
 		self.table.setItem(self.table.rowCount() - 1, 1, points_item)
 		self.table.setItem(self.table.rowCount() - 1, 2, balance_item)
-		self.table.sortByColumn(1, Qt.SortOrder.DescendingOrder)
+
+		self.table.setSortingEnabled(True)
+		self.table.sortItems(1, Qt.SortOrder.DescendingOrder)
 
 	def on_withdraw_clicked(self):
 		pass
