@@ -6,15 +6,15 @@ from PyQt6.QtWidgets import(
 	QMessageBox,
 	QInputDialog,
 	QToolBar,
-	QHeaderView,
+	QHeaderView
 )
 
 from PyQt6.QtGui import(
-	QAction,
+	QAction
 )
 
 from PyQt6.QtCore import(
-	Qt,
+	Qt
 )
 
 class Main_window(QMainWindow):
@@ -28,14 +28,22 @@ class Main_window(QMainWindow):
 		self.setCentralWidget(self.table)
 		self.addToolBar(self.toolbar)
 
+		self.table.cellChanged.connect(self.cell_changed)
+		self.table.itemDoubleClicked.connect(self.item_double_clicked)
+
 		self.setup_toolbar()
 		self.setup_table()
 
 		self.load_data()
 
-	def __deinit__(self):
+	def item_double_clicked(self, clicked_item):
+		self.clicked_item_text = clicked_item.text()
+	
+	def cell_changed(self, row, col):
+		self.table.sortByColumn(1, Qt.SortOrder.DescendingOrder)
+
+	def __del__(self):
 		self.store_data()
-		pass
 
 	def load_data(self):
 		pass
@@ -52,12 +60,25 @@ class Main_window(QMainWindow):
 		self.insert_record_action = QAction("Insert Record")
 		self.withdraw_action = QAction("Withdraw")
 		self.transfer_action = QAction("Transfer")
+		self.delete_record_action = QAction("Delete Record")
 
 		self.insert_record_action.triggered.connect(self.on_insert_record_clicked)
 		self.withdraw_action.triggered.connect(self.on_withdraw_clicked)
 		self.transfer_action.triggered.connect(self.on_transfer_clicked)
+		self.delete_record_action.triggered.connect(self.on_delete_record_clicked)
 
-		self.toolbar.addActions([self.insert_record_action, self.withdraw_action, self.transfer_action])
+		self.toolbar.addActions([self.insert_record_action, self.withdraw_action, self.transfer_action,
+			   self.delete_record_action])
+
+	def on_delete_record_clicked(self):
+		(row, row_ok) = QInputDialog().getInt(self, "", "");
+		row = row - 1
+
+		if not row_ok and row > self.table.rowCount():
+			return
+
+		# add confirmation
+		self.table.removeRow(row)
 	
 	def on_insert_record_clicked(self):
 		input_dialog = QInputDialog()
@@ -86,9 +107,13 @@ class Main_window(QMainWindow):
 
 		self.table.insertRow(self.table.rowCount())
 
-		name_item = QTableWidgetItem(name)
-		points_item = QTableWidgetItem(str(points))
-		balance_item = QTableWidgetItem(str(balance))
+		name_item = QTableWidgetItem()
+		points_item = QTableWidgetItem()
+		balance_item = QTableWidgetItem()
+
+		name_item.setData(Qt.ItemDataRole.EditRole, name)
+		points_item.setData(Qt.ItemDataRole.EditRole, points)
+		balance_item.setData(Qt.ItemDataRole.EditRole, balance)
 
 		for item in [name_item, points_item, balance_item]:
 			item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -96,6 +121,7 @@ class Main_window(QMainWindow):
 		self.table.setItem(self.table.rowCount() - 1, 0, name_item)
 		self.table.setItem(self.table.rowCount() - 1, 1, points_item)
 		self.table.setItem(self.table.rowCount() - 1, 2, balance_item)
+		self.table.sortByColumn(1, Qt.SortOrder.DescendingOrder)
 
 	def on_withdraw_clicked(self):
 		pass
