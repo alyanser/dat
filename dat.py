@@ -14,7 +14,9 @@ from PyQt6.QtGui import(
 )
 
 from PyQt6.QtCore import(
-	Qt
+	Qt,
+	QSettings,
+	QByteArray
 )
 
 class Main_window(QMainWindow):
@@ -22,34 +24,44 @@ class Main_window(QMainWindow):
 	def __init__(self):
 		super().__init__()
 
-		self.table = QTableWidget()
-		self.toolbar = QToolBar()
+		self.table = QTableWidget(self)
+		self.toolbar = QToolBar(self)
 
 		self.setCentralWidget(self.table)
 		self.addToolBar(self.toolbar)
 
 		self.table.cellChanged.connect(self.cell_changed)
-		self.table.itemDoubleClicked.connect(self.item_double_clicked)
 
 		self.setup_toolbar()
 		self.setup_table()
 
 		self.load_data()
 
-	def item_double_clicked(self, clicked_item):
-		self.clicked_item_text = clicked_item.text()
-	
 	def cell_changed(self, row, col):
-		self.table.sortByColumn(1, Qt.SortOrder.DescendingOrder)
 
-	def __del__(self):
-		self.store_data()
+		if col == 1:
+			self.table.sortByColumn(1, Qt.SortOrder.DescendingOrder)
 
 	def load_data(self):
 		pass
 
 	def store_data(self):
-		pass
+		settings = QSettings()
+		settings.beginGroup("datum")
+
+		text = QByteArray()
+
+		for i in range(self.table.rowCount()):
+			for j in range(self.table.columnCount()):
+				text += bytearray(self.table.item(i, j).text(), encoding = 'utf-8')
+
+				if j + 1 < self.table.columnCount():
+					text += b' '
+
+			if i + 1 < self.table.rowCount():
+				text += b','
+
+		settings.beginWriteArray(text)
 
 	def setup_table(self):
 		self.table.setColumnCount(3)
@@ -77,11 +89,11 @@ class Main_window(QMainWindow):
 		if not row_ok and row > self.table.rowCount():
 			return
 
-		# add confirmation
+		# todo: add confirmation
 		self.table.removeRow(row)
 	
 	def on_insert_record_clicked(self):
-		input_dialog = QInputDialog()
+		input_dialog = QInputDialog(self)
 		(name, name_ok) = input_dialog.getText(self, "Insert Record", "Name")
 
 		if not name_ok:
@@ -134,6 +146,7 @@ def main():
 	window = Main_window()
 	window.show()
 	app.exec()
+	window.store_data()
 
 if __name__ == '__main__':
 	main()
