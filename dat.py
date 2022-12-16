@@ -83,14 +83,21 @@ class Main_window(QMainWindow):
 			self.delete_record_action])
 
 	def on_delete_record_clicked(self):
-		(row, row_ok) = QInputDialog().getInt(self, "", "");
-		row = row - 1
+		(row, row_ok) = QInputDialog().getInt(self, "Delete Record", "ID of record to delete:");
 
-		if not row_ok and row > self.table.rowCount():
+		if not row_ok:
 			return
 
+		if row <= 0 or row > self.table.rowCount():
+			msg_box = QMessageBox(self)
+			msg_box.setText("Invalid ID")
+			msg_box.setDefaultButton(QMessageBox.StandardButton.Ok)
+			msg_box.setIcon(QMessageBox.Icon.Critical)
+			msg_box.exec()
+			return self.on_delete_record_clicked()
+
 		# todo: add confirmation
-		self.table.removeRow(row)
+		self.table.removeRow(row - 1)
 	
 	def on_insert_record_clicked(self):
 		input_dialog = QInputDialog(self)
@@ -104,10 +111,8 @@ class Main_window(QMainWindow):
 			msg_box.setText("Name cannot be empty")
 			msg_box.setDefaultButton(QMessageBox.StandardButton.Ok)
 			msg_box.setIcon(QMessageBox.Icon.Critical)
-			msg_box.show()
-			return
-
-		assert '\n' not in name
+			msg_box.exec()
+			return self.on_insert_record_clicked()
 
 		(points, points_ok) = input_dialog.getInt(self, "Insert Record", "Default Points for " + name)
 
