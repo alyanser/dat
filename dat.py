@@ -16,7 +16,6 @@ from PyQt6.QtGui import(
 from PyQt6.QtCore import(
 	Qt,
 	QSettings,
-	QByteArray
 )
 
 class Main_window(QMainWindow):
@@ -29,15 +28,9 @@ class Main_window(QMainWindow):
 
 		self.setCentralWidget(self.table)
 		self.addToolBar(self.toolbar)
-
 		self.setup_toolbar()
 		self.setup_table()
-
 		self.load_data()
-
-	def cell_changed(self, row, col):
-		if col == 1:
-			self.table.sortItems(1, Qt.SortOrder.DescendingOrder)
 
 	def load_data(self):
 		settings = QSettings("conat", "dat")
@@ -51,8 +44,10 @@ class Main_window(QMainWindow):
 			if row >= self.table.rowCount():
 				self.table.setRowCount(row + 1)
 
+			value = settings.value(key) if col == 0 else int(settings.value(key))
+
 			item = QTableWidgetItem()
-			item.setData(Qt.ItemDataRole.EditRole, settings.value(key))
+			item.setData(Qt.ItemDataRole.EditRole, value)
 			item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
 
 			self.table.setItem(row, col, item)
@@ -60,6 +55,7 @@ class Main_window(QMainWindow):
 	def store_data(self):
 		settings = QSettings("conat", "dat")
 		settings.beginGroup("datum")
+		settings.clear()
 
 		for i in range(self.table.rowCount()):
 			for j in range(self.table.columnCount()):
@@ -69,6 +65,8 @@ class Main_window(QMainWindow):
 		self.table.setColumnCount(3)
 		self.table.setHorizontalHeaderLabels(["Name", "Points", "Balance"])
 		self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+		self.table.setSortingEnabled(True)
+		self.table.sortItems(1, Qt.SortOrder.DescendingOrder)
 
 	def setup_toolbar(self):
 		self.insert_record_action = QAction("Insert Record")
@@ -82,7 +80,7 @@ class Main_window(QMainWindow):
 		self.delete_record_action.triggered.connect(self.on_delete_record_clicked)
 
 		self.toolbar.addActions([self.insert_record_action, self.withdraw_action, self.transfer_action,
-			   self.delete_record_action])
+			self.delete_record_action])
 
 	def on_delete_record_clicked(self):
 		(row, row_ok) = QInputDialog().getInt(self, "", "");
@@ -111,12 +109,12 @@ class Main_window(QMainWindow):
 
 		assert '\n' not in name
 
-		(points, points_ok) = input_dialog.getDouble(self, "Insert Record", "Default Points for " + name)
+		(points, points_ok) = input_dialog.getInt(self, "Insert Record", "Default Points for " + name)
 
 		if not points_ok:
 			return
 
-		(balance, balance_ok) = input_dialog.getDouble(self, "Insert Record", "Default Balance of " + name)
+		(balance, balance_ok) = input_dialog.getInt(self, "Insert Record", "Default Balance of " + name)
 
 		if not balance_ok:
 			return
@@ -140,7 +138,6 @@ class Main_window(QMainWindow):
 		self.table.setItem(self.table.rowCount() - 1, 2, balance_item)
 
 		self.table.setSortingEnabled(True)
-		self.table.sortItems(1, Qt.SortOrder.DescendingOrder)
 
 	def on_withdraw_clicked(self):
 		pass
@@ -153,7 +150,7 @@ def main():
 	window = Main_window()
 	window.show()
 	app.exec()
-	window.store_data()
+	window.store_data() # ugly, fix it somehow
 
 if __name__ == '__main__':
 	main()
